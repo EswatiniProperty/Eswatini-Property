@@ -1,1 +1,95 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Eswatini Property - Find Your Home in Eswatini</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:Arial,sans-serif}
+body{background:#fff;color:#1A1A1A}
+header{background:#fff;display:flex;justify-content:space-between;align-items:center;padding:15px 5%;box-shadow:0 2px 10px rgba(0,0,0,.08);position:sticky;top:0;z-index:10}
+.logo{font-size:20px;font-weight:800;color:#0B4F9C}
+.logo span{color:#2E9BD6}
+nav a{margin:0 10px;text-decoration:none;color:#1A1A1A;font-weight:600;font-size:14px}
+.btn{background:#0B4F9C;color:#fff;padding:10px 16px;border-radius:8px;text-decoration:none;font-weight:700;font-size:14px}
+.hero{background:#0B4F9C;color:#fff;padding:50px 5%;text-align:center}
+.hero h1{font-size:32px;margin-bottom:10px}
+.hero p{opacity:.9;margin-bottom:20px}
+.search{background:#fff;padding:15px;border-radius:12px;display:flex;gap:10px;max-width:900px;margin:auto;flex-wrap:wrap}
+.search select{flex:1;padding:12px;border:1px solid #ddd;border-radius:8px;min-width:140px}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;padding:35px 5%}
+.card{border:1px solid #eee;border-radius:12px;overflow:hidden}
+.card img{width:100%;height:200px;object-fit:cover}
+.card-body{padding:15px}
+.price{color:#0B4F9C;font-size:20px;font-weight:800;margin:8px 0}
+.badge{background:#2E9BD6;color:#fff;padding:4px 10px;border-radius:20px;font-size:12px}
+.whatsapp{background:#25D366;color:#fff;padding:10px;display:block;text-align:center;text-decoration:none;border-radius:8px;margin-top:10px;font-weight:700}
+footer{background:#0A3A73;color:#fff;text-align:center;padding:25px}
+@media(max-width:768px){.grid{grid-template-columns:1fr}nav{display:none}.hero h1{font-size:26px}}
+</style>
+</head>
+<body>
 
+<header>
+  <div class="logo">🏠 Eswatini <span>Property</span></div>
+  <nav>
+    <a href="#">Home</a>
+    <a href="#">Buy</a>
+    <a href="#">Rent</a>
+    <a href="#">Agents</a>
+  </nav>
+  <a href="#" class="btn">+ List Property</a>
+</header>
+
+<section class="hero">
+  <h1>Find Your Home in Eswatini</h1>
+  <p>Houses, Apartments & Land in Mbabane, Manzini, Ezulwini & Matsapha</p>
+  <div class="search">
+    <select><option>Buy / Rent</option><option>Buy</option><option>Rent</option></select>
+    <select><option>Location</option><option>Mbabane</option><option>Manzini</option><option>Ezulwini</option><option>Matsapha</option></select>
+    <select><option>Price</option><option>Under E500k</option><option>E500k - E1M</option><option>E1M+</option></select>
+    <select><option>Beds</option><option>1</option><option>2</option><option>3</option><option>4+</option></select>
+    <a href="#" class="btn">Search</a>
+  </div>
+</section>
+
+<section class="grid">
+  <div class="card">
+    <img src="https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=800">
+    <div class="card-body">
+      <span class="badge">For Sale</span>
+      <div class="price">E1,200,000</div>
+      <h3>Family Home with Garden - Ezulwini</h3>
+      <p>4 Beds • 3 Baths • 220m²</p>
+      <a href="#" class="whatsapp">WhatsApp Agent</a>
+    </div>
+  </div>
+  <div class="card">
+    <img src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800">
+    <div class="card-body">
+      <span class="badge">For Rent</span>
+      <div class="price">E6,500 / month</div>
+      <h3>Modern 2 Bed Apartment - Manzini</h3>
+      <p>2 Beds • 1 Bath • 85m²</p>
+      <a href="#" class="whatsapp">WhatsApp Agent</a>
+    </div>
+  </div>
+  <div class="card">
+    <img src="https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800">
+    <div class="card-body">
+      <span class="badge">For Sale</span>
+      <div class="price">E950,000</div>
+      <h3>3 Bed House - Mbabane</h3>
+      <p>3 Beds • 2 Baths • 180m²</p>
+      <a href="#" class="whatsapp">WhatsApp Agent</a>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <p><b>Eswatini Property</b> - Find Your Home in Eswatini</p>
+  <p>© 2026 Eswatini Property. All Rights Reserved.</p>
+</footer>
+
+</body>
+</html>

@@ -177,13 +177,13 @@ reader.onload=function(e){
 let img=new Image();
 img.onload=function(){
 let canvas=document.createElement('canvas');
-let maxW=800;
+let maxW=600;
 let scale=Math.min(1, maxW/img.width);
 canvas.width=img.width*scale;
 canvas.height=img.height*scale;
 let ctx=canvas.getContext('2d');
 ctx.drawImage(img,0,0,canvas.width,canvas.height);
-uploadedPhoto=canvas.toDataURL('image/jpeg',0.7);
+uploadedPhoto=canvas.toDataURL('image/jpeg',0.5);
 let p=document.getElementById('photoPreview');
 p.src=uploadedPhoto; p.style.display='block';
 };
@@ -235,10 +235,18 @@ if(!baths){alert('Please fill Bathrooms - e.g. 2');document.getElementById('fBat
 if(!owner){alert('Please fill Your Name');return;}
 if(!phone){alert('Please fill Your Phone');return;}
 if(!momo){alert('Please fill MoMo Reference');return;}
+let newItem={title:t,loc:loc,type:type,price:price,beds:beds,baths:baths,img:img,desc:desc,owner:owner,phone:phone,momo:momo,status:"Pending",date:Date.now()};
 try{
-listings.push({title:t,loc:loc,type:type,price:price,beds:beds,baths:baths,img:img,desc:desc,owner:owner,phone:phone,momo:momo,status:"Pending",date:Date.now()});
+listings.push(newItem);
 localStorage.setItem('esw_listings',JSON.stringify(listings));
-}catch(e){alert('Photo too big! Please choose a smaller photo or use a link. Try again with a smaller image.');return;}
+}catch(e){
+// STORAGE FULL - Save without big photo, use link/placeholder instead
+listings.pop();
+newItem.img=imgLink||'https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=800';
+listings.push(newItem);
+try{ localStorage.setItem('esw_listings',JSON.stringify(listings)); }catch(e2){ alert('Storage still full. Please delete an old test listing in Admin first.'); return; }
+alert('Saved! Photo was too big for storage, so we used a standard photo. Please send your real photo to Admin on WhatsApp.');
+}
 closeList(); uploadedPhoto=""; document.getElementById('photoPreview').style.display='none'; document.getElementById('fPhoto').value='';
 let msg=`NEW LISTING - E100 PAID%0A%0ATitle: ${t}%0ALocation: ${loc}%0AType: ${type}%0APrice: E${price}%0ABeds: ${beds} Baths: ${baths}%0AOwner: ${owner}%0APhone: ${phone}%0AMoMo Ref: ${momo}%0ADesc: ${desc}%0APhoto: Uploaded in site (ask owner to send via WhatsApp if needed)`;
 window.open(`https://wa.me/${WA_NUMBER}?text=${msg}`,'_blank');

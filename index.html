@@ -11,8 +11,9 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Eswatini Property">
 <meta name="application-name" content="Eswatini Property">
-<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Crect width='180' height='180' rx='40' fill='%230b2f5e'/%3E%3Ctext x='90' y='115' font-size='80' text-anchor='middle' fill='white' font-family='Arial'%3E🏠%3C/text%3E%3C/svg%3E">
-<link id="manifestLink" rel="manifest" href="">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="apple-touch-icon" sizes="180x180" href="icon-180.png">
+<link rel="icon" type="image/png" href="icon-180.png">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:Arial,sans-serif}
@@ -186,21 +187,6 @@ body{background:#f2f4f8;padding-bottom:80px}
 </div>
 
 <script>
-// --- PWA: Manifest + Service Worker (makes Add to Home Screen work, no address bar) ---
-(function(){
-  try{
-    var icon = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='100' fill='%230b2f5e'/%3E%3Ctext x='256' y='340' font-size='230' text-anchor='middle' fill='white' font-family='Arial'%3E🏠%3C/text%3E%3C/svg%3E";
-    var manifest = {name:"Eswatini Property", short_name:"Eswatini Property", description:"Find Your Home in Eswatini", start_url:".", display:"standalone", background_color:"#0b2f5e", theme_color:"#0b2f5e", orientation:"portrait", icons:[{src:icon, sizes:"512x512", type:"image/svg+xml", purpose:"any maskable"}]};
-    var blob = new Blob([JSON.stringify(manifest)], {type:"application/json"});
-    document.getElementById('manifestLink').href = URL.createObjectURL(blob);
-    if('serviceWorker' in navigator){
-      var swCode = "self.addEventListener('fetch',function(e){});";
-      var swBlob = new Blob([swCode], {type:"text/javascript"});
-      navigator.serviceWorker.register(URL.createObjectURL(swBlob)).catch(function(){});
-    }
-  }catch(e){}
-})();
-
 let deferredPrompt = null;
 window.addEventListener('beforeinstallprompt', function(e){
   e.preventDefault();
@@ -216,7 +202,6 @@ window.addEventListener('load', function(){
       document.getElementById('installBanner').style.display='flex';
       document.getElementById('installText').innerText = 'iPhone: Tap Share ⬆️ then Add to Home Screen.';
     } else if(!deferredPrompt){
-      // Show banner anyway for Android Chrome so users know
       setTimeout(function(){ document.getElementById('installBanner').style.display='flex'; }, 1500);
     }
   }
@@ -247,7 +232,7 @@ let curLoc='All', curType='All';
 
 const DEMO_LISTINGS = [
   {id:-1, title:"Modern 4 Bed House in Manzini", loc:"Manzini", type:"Rent", price:8500, beds:4, baths:3, desc:"Spacious family house near Manzini town. Water + electricity, secure yard, garage. Perfect for family.", img:"https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=800", owner:"Test Owner", phone:"76xxxxxx", momo:"TEST", status:"Approved", is_featured:true, is_demo:true, date:Date.now()},
-  {id:-2, title:"2 Bed Flat in Mbabane", loc:"Mbabane", type:"Rent", price:4500, beds:2, baths:1, desc:"Neat flat in Mbabane town. Close to shops and schools. Safe complex.", img:"https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800", owner:"Test Owner", phone:"76xxxxxx", momo:"TEST", status:"Approved", is_featured:false, is_demo:true, date:Date.now()-1000},
+  {id:-2, title:"2 Bed Flat in Mbabane", loc:"Mbabane", type:"Rent", price:4500, beds:2, baths:1, desc:"Neat flat in Mbabane town. Close to shops and schools. Safe complex.", img:"https://images.unsplash.com/photo-1502672266-1c1ef2d93688?w=800", owner:"Test Owner", phone:"76xxxxxx", momo:"TEST", status:"Approved", is_featured:false, is_demo:true, date:Date.now()-1000},
   {id:-3, title:"Luxury 5 Bed House in Ezulwini", loc:"Mbabane", type:"Sale", price:3200000, beds:5, baths:4, desc:"Luxury house in Ezulwini with garden, pool view, big yard. Ideal for family or investment.", img:"https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800", owner:"Test Owner", phone:"76xxxxxx", momo:"TEST", status:"Approved", is_featured:false, is_demo:true, date:Date.now()-2000}
 ];
 

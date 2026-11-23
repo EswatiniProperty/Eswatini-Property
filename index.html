@@ -56,6 +56,7 @@ body{background:#f2f4f8;padding-bottom:80px}
 .hidden{display:none}
 #photoPreview{width:100%;height:180px;object-fit:cover;border-radius:12px;display:none;margin-top:8px;border:1px solid #ddd}
 .uploadBtn{display:block;text-align:center;background:#eef4ff;border:2px dashed #0b2f5e;padding:14px;border-radius:12px;font-weight:bold;color:#0b2f5e;cursor:pointer;margin:6px 0}
+.req{color:red}
 </style>
 </head>
 <body>
@@ -118,13 +119,13 @@ body{background:#f2f4f8;padding-bottom:80px}
 <span class="close" onclick="closeList()">×</span>
 <h2>+ List Your Property</h2>
 <p style="font-size:13px;color:#666">Listing Fee: <b>E100</b> for 30 days. Your listing goes to admin for approval.</p>
-<label>Property Title</label><input id="fTitle" placeholder="e.g. 3 Bed House in Manzini">
+<label>Property Title <span class="req">*</span></label><input id="fTitle" placeholder="e.g. 3 Bed House in Manzini">
 <label>Location</label>
 <select id="fLoc"><option>Manzini</option><option>Mbabane</option><option>Matsapha</option><option>Nhlangano</option><option>Siteki</option><option>Other</option></select>
 <label>Type</label><select id="fType"><option>Rent</option><option>Sale</option></select>
-<label>Price (E)</label><input id="fPrice" type="number" placeholder="4500">
-<label>Bedrooms</label><input id="fBeds" type="number" placeholder="3">
-<label>Bathrooms</label><input id="fBaths" type="number" placeholder="2">
+<label>Price (E) <span class="req">*</span></label><input id="fPrice" type="number" placeholder="4500">
+<label>Bedrooms <span class="req">*</span></label><input id="fBeds" type="number" placeholder="3">
+<label>Bathrooms <span class="req">*</span></label><input id="fBaths" type="number" placeholder="2">
 <label>Property Photo (from your phone)</label>
 <label class="uploadBtn" for="fPhoto">📷 Tap to Choose / Take Photo</label>
 <input id="fPhoto" type="file" accept="image/*" style="display:none" onchange="previewPhoto(this)">
@@ -132,15 +133,15 @@ body{background:#f2f4f8;padding-bottom:80px}
 <p style="font-size:12px;color:#666">Or paste photo link if you have one:</p>
 <input id="fImg" placeholder="https://... (optional)">
 <label>Description</label><textarea id="fDesc" rows="3" placeholder="Near Manzini town, water + electricity..."></textarea>
-<label>Your Name (Owner)</label><input id="fOwner" placeholder="Your full name">
-<label>Your Phone (Owner)</label><input id="fPhone" placeholder="76xxxxxx">
+<label>Your Name (Owner) <span class="req">*</span></label><input id="fOwner" placeholder="Your full name">
+<label>Your Phone (Owner) <span class="req">*</span></label><input id="fPhone" placeholder="76xxxxxx">
 <div class="payBox">
 <b>💰 PAY E100 LISTING FEE</b><br>
 1. Send <b>E100</b> via MoMo to <b>78213337</b><br>
 2. Enter MoMo Reference below<br>
 3. Tap Submit — Admin will approve within hours
 </div>
-<label>MoMo Reference / Transaction ID</label><input id="fMomo" placeholder="e.g. MP123456">
+<label>MoMo Reference / Transaction ID <span class="req">*</span></label><input id="fMomo" placeholder="e.g. MP123456">
 <button class="bigBtn blue" onclick="submitProperty()">Submit for Approval • E100 Paid</button>
 <button class="bigBtn grey" onclick="closeList()">Cancel</button>
 </div>
@@ -216,9 +217,16 @@ return `<div class="card">
 function openList(){document.getElementById('listModal').style.display='block';}
 function closeList(){document.getElementById('listModal').style.display='none';}
 function submitProperty(){
-let t=document.getElementById('fTitle').value, loc=document.getElementById('fLoc').value, type=document.getElementById('fType').value, price=document.getElementById('fPrice').value, beds=document.getElementById('fBeds').value, baths=document.getElementById('fBaths').value, imgLink=document.getElementById('fImg').value, desc=document.getElementById('fDesc').value, owner=document.getElementById('fOwner').value, phone=document.getElementById('fPhone').value, momo=document.getElementById('fMomo').value;
+let t=document.getElementById('fTitle').value.trim(), loc=document.getElementById('fLoc').value, type=document.getElementById('fType').value, price=document.getElementById('fPrice').value, beds=document.getElementById('fBeds').value, baths=document.getElementById('fBaths').value, imgLink=document.getElementById('fImg').value, desc=document.getElementById('fDesc').value, owner=document.getElementById('fOwner').value.trim(), phone=document.getElementById('fPhone').value.trim(), momo=document.getElementById('fMomo').value.trim();
 let img=uploadedPhoto||imgLink||'https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=800';
-if(!t||!price||!owner||!phone||!momo){alert('Please fill Title, Price, Your Name, Phone and MoMo Reference');return;}
+// FIXED VALIDATION - Beds & Baths now required
+if(!t){alert('Please fill Property Title');return;}
+if(!price){alert('Please fill Price');return;}
+if(!beds){alert('Please fill Bedrooms - e.g. 3');document.getElementById('fBeds').focus();return;}
+if(!baths){alert('Please fill Bathrooms - e.g. 2');document.getElementById('fBaths').focus();return;}
+if(!owner){alert('Please fill Your Name');return;}
+if(!phone){alert('Please fill Your Phone');return;}
+if(!momo){alert('Please fill MoMo Reference');return;}
 try{
 listings.push({title:t,loc:loc,type:type,price:price,beds:beds,baths:baths,img:img,desc:desc,owner:owner,phone:phone,momo:momo,status:"Pending",date:Date.now()});
 localStorage.setItem('esw_listings',JSON.stringify(listings));

@@ -54,6 +54,8 @@ body{background:#f2f4f8;padding-bottom:80px}
 .green{background:#25D366}.blue{background:#0b2f5e;color:white}.grey{background:#eee}.red{background:#ff4444;color:white}
 .close{float:right;font-size:22px;cursor:pointer}
 .hidden{display:none}
+#photoPreview{width:100%;height:180px;object-fit:cover;border-radius:12px;display:none;margin-top:8px;border:1px solid #ddd}
+.uploadBtn{display:block;text-align:center;background:#eef4ff;border:2px dashed #0b2f5e;padding:14px;border-radius:12px;font-weight:bold;color:#0b2f5e;cursor:pointer;margin:6px 0}
 </style>
 </head>
 <body>
@@ -82,7 +84,6 @@ body{background:#f2f4f8;padding-bottom:80px}
 <button onclick="setLoc('Siteki',this)">Siteki</button>
 </div>
 
-<!-- FILTER + SORT -->
 <div class="filterBox">
 <div class="fRow">
 <div><label>Min Price (E)</label><input id="minPrice" type="number" placeholder="e.g. 2000" oninput="render()"></div>
@@ -124,7 +125,12 @@ body{background:#f2f4f8;padding-bottom:80px}
 <label>Price (E)</label><input id="fPrice" type="number" placeholder="4500">
 <label>Bedrooms</label><input id="fBeds" type="number" placeholder="3">
 <label>Bathrooms</label><input id="fBaths" type="number" placeholder="2">
-<label>Photo Link (paste image URL) or leave default</label><input id="fImg" placeholder="https://...">
+<label>Property Photo (from your phone)</label>
+<label class="uploadBtn" for="fPhoto">📷 Tap to Choose / Take Photo</label>
+<input id="fPhoto" type="file" accept="image/*" style="display:none" onchange="previewPhoto(this)">
+<img id="photoPreview">
+<p style="font-size:12px;color:#666">Or paste photo link if you have one:</p>
+<input id="fImg" placeholder="https://... (optional)">
 <label>Description</label><textarea id="fDesc" rows="3" placeholder="Near Manzini town, water + electricity..."></textarea>
 <label>Your Name (Owner)</label><input id="fOwner" placeholder="Your full name">
 <label>Your Phone (Owner)</label><input id="fPhone" placeholder="76xxxxxx">
@@ -153,6 +159,7 @@ body{background:#f2f4f8;padding-bottom:80px}
 
 <script>
 const WA_NUMBER="381659393420";
+let uploadedPhoto="";
 let listings = JSON.parse(localStorage.getItem('esw_listings')||'[]');
 if(listings.length===0){
 listings=[
@@ -164,6 +171,16 @@ localStorage.setItem('esw_listings',JSON.stringify(listings));
 }
 listings.forEach((l,i)=>{if(!l.date) l.date=Date.now()-i*1000});
 let curLoc='All', curType='All';
+function previewPhoto(input){
+let file=input.files[0]; if(!file) return;
+let reader=new FileReader();
+reader.onload=function(e){
+uploadedPhoto=e.target.result;
+let p=document.getElementById('photoPreview');
+p.src=uploadedPhoto; p.style.display='block';
+};
+reader.readAsDataURL(file);
+}
 function setLoc(l,el){curLoc=l;document.querySelectorAll('.chips button').forEach(b=>b.classList.remove('active'));el.classList.add('active');render();}
 function filterType(t){curType=t;render();}
 function clearFilters(){document.getElementById('searchInput').value='';document.getElementById('minPrice').value='';document.getElementById('maxPrice').value='';document.getElementById('bedsFilter').value='';document.getElementById('sortBy').value='new';curLoc='All';curType='All';document.querySelectorAll('.chips button').forEach(b=>b.classList.remove('active'));document.querySelector('.chips button').classList.add('active');render();}
@@ -199,12 +216,15 @@ return `<div class="card">
 function openList(){document.getElementById('listModal').style.display='block';}
 function closeList(){document.getElementById('listModal').style.display='none';}
 function submitProperty(){
-let t=document.getElementById('fTitle').value, loc=document.getElementById('fLoc').value, type=document.getElementById('fType').value, price=document.getElementById('fPrice').value, beds=document.getElementById('fBeds').value, baths=document.getElementById('fBaths').value, img=document.getElementById('fImg').value||'https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=800', desc=document.getElementById('fDesc').value, owner=document.getElementById('fOwner').value, phone=document.getElementById('fPhone').value, momo=document.getElementById('fMomo').value;
+let t=document.getElementById('fTitle').value, loc=document.getElementById('fLoc').value, type=document.getElementById('fType').value, price=document.getElementById('fPrice').value, beds=document.getElementById('fBeds').value, baths=document.getElementById('fBaths').value, imgLink=document.getElementById('fImg').value, desc=document.getElementById('fDesc').value, owner=document.getElementById('fOwner').value, phone=document.getElementById('fPhone').value, momo=document.getElementById('fMomo').value;
+let img=uploadedPhoto||imgLink||'https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=800';
 if(!t||!price||!owner||!phone||!momo){alert('Please fill Title, Price, Your Name, Phone and MoMo Reference');return;}
+try{
 listings.push({title:t,loc:loc,type:type,price:price,beds:beds,baths:baths,img:img,desc:desc,owner:owner,phone:phone,momo:momo,status:"Pending",date:Date.now()});
 localStorage.setItem('esw_listings',JSON.stringify(listings));
-closeList();
-let msg=`NEW LISTING - E100 PAID%0A%0ATitle: ${t}%0ALocation: ${loc}%0AType: ${type}%0APrice: E${price}%0ABeds: ${beds} Baths: ${baths}%0AOwner: ${owner}%0APhone: ${phone}%0AMoMo Ref: ${momo}%0ADesc: ${desc}`;
+}catch(e){alert('Photo too big! Please choose a smaller photo or use a link. Try again with a smaller image.');return;}
+closeList(); uploadedPhoto=""; document.getElementById('photoPreview').style.display='none'; document.getElementById('fPhoto').value='';
+let msg=`NEW LISTING - E100 PAID%0A%0ATitle: ${t}%0ALocation: ${loc}%0AType: ${type}%0APrice: E${price}%0ABeds: ${beds} Baths: ${baths}%0AOwner: ${owner}%0APhone: ${phone}%0AMoMo Ref: ${momo}%0ADesc: ${desc}%0APhoto: Uploaded in site (ask owner to send via WhatsApp if needed)`;
 window.open(`https://wa.me/${WA_NUMBER}?text=${msg}`,'_blank');
 alert('Submitted! Your listing is Pending Approval. Admin will approve after confirming E100 payment to 78213337.');
 render(); renderMy();
@@ -260,7 +280,7 @@ document.getElementById('adminList').innerHTML=
 `<div style="padding:0 16px"><b>${pending.length} Pending</b> • ${approved.length} Approved by owners</div>`+
 pending.map(p=>{
 let idx=listings.indexOf(p);
-return `<div class="card"><div class="cardBody"><b>${p.title}</b><br>📍 ${p.loc} • ${p.type} • E${p.price}<br>👤 Owner: ${p.owner} • 📞 ${p.phone}<br>💰 MoMo Ref: ${p.momo}<br><p style="font-size:13px;margin:6px 0">${p.desc}</p><div class="actions"><button class="green" onclick="approveListing(${idx})">✅ Approve</button><button class="red" onclick="rejectListing(${idx})">❌ Reject</button></div></div></div>`
+return `<div class="card"><div class="cardBody"><img src="${p.img}" style="height:150px;border-radius:10px;margin-bottom:8px"><b>${p.title}</b><br>📍 ${p.loc} • ${p.type} • E${p.price}<br>👤 Owner: ${p.owner} • 📞 ${p.phone}<br>💰 MoMo Ref: ${p.momo}<br><p style="font-size:13px;margin:6px 0">${p.desc}</p><div class="actions"><button class="green" onclick="approveListing(${idx})">✅ Approve</button><button class="red" onclick="rejectListing(${idx})">❌ Reject</button></div></div></div>`
 }).join('') || '<p style="padding:20px;text-align:center">No pending listings. Good job!</p>' +
 approved.map(p=>{
 let idx=listings.indexOf(p);

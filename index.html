@@ -30,10 +30,13 @@ body{background:#f2f4f8;padding-bottom:80px}
 .section{padding:0 16px;display:flex;justify-content:space-between;align-items:center}
 .section h3{font-size:17px}
 .card{background:white;margin:12px 16px;border-radius:16px;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,.08)}
+.card.featuredCard{border:2px solid #FFD700;box-shadow:0 4px 14px rgba(255,200,0,.35)}
 .card img{width:100%;height:190px;object-fit:cover}
 .cardBody{padding:14px}
 .badge{display:inline-block;padding:5px 10px;border-radius:20px;font-size:12px;font-weight:bold;color:white}
 .rent{background:#2e9e5b}.sale{background:#ff6b00}.pending{background:#ffaa00}
+.featuredBadge{background:#FFD700;color:#000}
+.demoBadge{background:#0b2f5e}
 .price{font-size:20px;font-weight:bold;margin:8px 0 2px}
 .meta{color:#666;font-size:13px}
 .desc{font-size:13px;color:#444;margin:8px 0}
@@ -99,7 +102,7 @@ body{background:#f2f4f8;padding-bottom:80px}
 <button class="clearBtn" onclick="clearFilters()">Clear Filters</button>
 </div>
 
-<div class="ownerBox">👋 <b>Are you an owner?</b> List your property for only <b>E100</b> for 30 days. Pay via MoMo to <b>78213337</b>. We find tenants/buyers for you. <a href="#" onclick="openList();return false;">List Now →</a></div>
+<div class="ownerBox">👋 <b>Are you an owner?</b> List your property for only <b>E100</b> for 30 days. Want to be at the TOP? Add <b>⭐ Featured +E150</b> (Total E250). Pay via MoMo to <b>78213337</b>. <a href="#" onclick="openList();return false;">List Now →</a></div>
 
 <div class="section"><h3>Featured Properties</h3><span id="count"></span></div>
 <div id="list"></div>
@@ -112,14 +115,14 @@ body{background:#f2f4f8;padding-bottom:80px}
 <div id="adminSection" class="hidden">
 <div class="section"><h3>🔐 Admin - Pending Approvals</h3><button onclick="showHome(document.querySelector('.nav button'))" style="padding:6px 12px;border-radius:10px;border:1px solid #ddd;background:white">Back Home</button></div>
 <div id="adminList"></div>
-<div style="padding:0 16px"><p style="font-size:12px;color:#666">Check MoMo 78213337 for payment, then Approve. If no payment, Reject.</p></div>
+<div style="padding:0 16px"><p style="font-size:12px;color:#666">Check MoMo 78213337 for payment, then Approve. Normal = E100. Featured = E250. If no payment, Reject.</p></div>
 </div>
 
 <div id="listModal" class="modal">
 <div class="modalContent">
 <span class="close" onclick="closeList()">×</span>
 <h2>+ List Your Property</h2>
-<p style="font-size:13px;color:#666">Listing Fee: <b>E100</b> for 30 days. Your listing goes to admin for approval.</p>
+<p style="font-size:13px;color:#666">Listing Fee: <b>E100</b> for 30 days. Featured: <b>E250</b> total. Your listing goes to admin for approval.</p>
 <label>Property Title <span class="req">*</span></label><input id="fTitle" placeholder="e.g. 3 Bed House in Manzini">
 <label>Location</label>
 <select id="fLoc"><option>Manzini</option><option>Mbabane</option><option>Matsapha</option><option>Nhlangano</option><option>Siteki</option><option>Other</option></select>
@@ -137,13 +140,12 @@ body{background:#f2f4f8;padding-bottom:80px}
 <label>Your Name (Owner) <span class="req">*</span></label><input id="fOwner" placeholder="Your full name">
 <label>Your Phone (Owner) <span class="req">*</span></label><input id="fPhone" placeholder="76xxxxxx">
 <div class="payBox">
-<b>💰 PAY E100 LISTING FEE</b><br>
-1. Send <b>E100</b> via MoMo to <b>78213337</b><br>
-2. Enter MoMo Reference below<br>
-3. Tap Submit — Admin will approve within hours
+<b>💰 PAY LISTING FEE</b><br>
+<label style="display:flex;gap:8px;align-items:center;margin-top:10px;cursor:pointer"><input type="checkbox" id="fFeatured" onchange="updateFee()" style="width:20px;height:20px;margin:0"> ⭐ Make it FEATURED - Top of Homepage (+E150)</label>
+<p id="feeText" style="margin-top:8px">Total to Pay: <b>E100</b><br>1. Send via MoMo to <b>78213337</b><br>2. Enter MoMo Reference below<br>3. Tap Submit - Admin will approve</p>
 </div>
 <label>MoMo Reference / Transaction ID <span class="req">*</span></label><input id="fMomo" placeholder="e.g. MP123456">
-<button class="bigBtn blue" onclick="submitProperty()">Submit for Approval • E100 Paid</button>
+<button class="bigBtn blue" onclick="submitProperty()">Submit for Approval</button>
 <button class="bigBtn grey" onclick="closeList()">Cancel</button>
 </div>
 </div>
@@ -168,17 +170,33 @@ let uploadedPhoto="";
 let listings = [];
 let curLoc='All', curType='All';
 
+// TEST LISTINGS - show only when Supabase is empty, for testing/demo
+const DEMO_LISTINGS = [
+  {id:-1, title:"Modern 4 Bed House in Manzini", loc:"Manzini", type:"Rent", price:8500, beds:4, baths:3, desc:"Spacious family house near Manzini town. Water + electricity, secure yard, garage. Perfect for family.", img:"https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=800", owner:"Test Owner", phone:"76xxxxxx", momo:"TEST", status:"Approved", is_featured:true, is_demo:true, date:Date.now()},
+  {id:-2, title:"2 Bed Flat in Mbabane", loc:"Mbabane", type:"Rent", price:4500, beds:2, baths:1, desc:"Neat flat in Mbabane town. Close to shops and schools. Safe complex.", img:"https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800", owner:"Test Owner", phone:"76xxxxxx", momo:"TEST", status:"Approved", is_featured:false, is_demo:true, date:Date.now()-1000},
+  {id:-3, title:"Luxury 5 Bed House in Ezulwini", loc:"Mbabane", type:"Sale", price:3200000, beds:5, baths:4, desc:"Luxury house in Ezulwini with garden, pool view, big yard. Ideal for family or investment.", img:"https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800", owner:"Test Owner", phone:"76xxxxxx", momo:"TEST", status:"Approved", is_featured:false, is_demo:true, date:Date.now()-2000}
+];
+
+function updateFee(){
+  let isF = document.getElementById('fFeatured').checked;
+  document.getElementById('feeText').innerHTML = isF ? 'Total to Pay: <b>E250 (E100 + E150 Featured)</b><br>1. Send via MoMo to <b>78213337</b><br>2. Enter MoMo Reference below<br>3. Tap Submit - Admin will approve' : 'Total to Pay: <b>E100</b><br>1. Send via MoMo to <b>78213337</b><br>2. Enter MoMo Reference below<br>3. Tap Submit - Admin will approve';
+}
+
 async function loadFromSupabase(){
   const {data, error} = await supabaseClient.from('listings').select('*').order('created_at',{ascending:false});
-  if(error){ console.log(error); document.getElementById('list').innerHTML='<p style="text-align:center;padding:20px">Error loading: '+error.message+'</p>'; return; }
+  if(error){ console.log(error); listings = [...DEMO_LISTINGS]; render(); return; }
   listings = (data||[]).map(r=>({
     id: r.id,
     title: r.title, loc: r.location, type: r.type, price: r.price,
     beds: r.beds, baths: r.baths, desc: r.description, img: r.photo_url || 'https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=800',
     owner: r.owner_name, phone: r.owner_phone, momo: r.momo_ref,
     status: r.status==='approved' ? 'Approved' : 'Pending',
+    is_featured: r.is_featured || false,
+    is_demo: false,
     date: new Date(r.created_at).getTime()
   }));
+  // If no real listings yet, show test listings so homepage is not empty
+  if(listings.length===0){ listings = [...DEMO_LISTINGS]; }
   render();
 }
 
@@ -217,13 +235,16 @@ if(sort==='low') filtered.sort((a,b)=>Number(a.price)-Number(b.price));
 if(sort==='high') filtered.sort((a,b)=>Number(b.price)-Number(a.price));
 if(sort==='beds') filtered.sort((a,b)=>Number(b.beds)-Number(a.beds));
 if(sort==='new') filtered.sort((a,b)=>(b.date||0)-(a.date||0));
+let feat = filtered.filter(x=>x.is_featured);
+let normal = filtered.filter(x=>!x.is_featured);
+filtered = [...feat, ...normal];
 document.getElementById('count').innerText=filtered.length+' found';
 document.getElementById('list').innerHTML=filtered.map((p,i)=>{
 let idx=listings.indexOf(p);
-return `<div class="card">
+return `<div class="card ${p.is_featured?'featuredCard':''}">
 <img src="${p.img}">
 <div class="cardBody">
-<span class="badge ${p.type==='Rent'?'rent':'sale'}">${p.type}</span> <span style="font-size:13px">📍 ${p.loc}</span>
+<span class="badge ${p.type==='Rent'?'rent':'sale'}">${p.type}</span> ${p.is_featured?'<span class="badge featuredBadge">⭐ FEATURED</span>':''} ${p.is_demo?'<span class="badge demoBadge">TEST</span>':''} <span style="font-size:13px">📍 ${p.loc}</span>
 <div class="price">E${Number(p.price).toLocaleString()} ${p.type==='Rent'?'/month':''}</div>
 <div class="meta">🛏 ${p.beds} Beds • 🛁 ${p.baths} Baths</div>
 <div style="font-weight:bold;margin-top:6px">${p.title}</div>
@@ -240,6 +261,7 @@ function closeList(){document.getElementById('listModal').style.display='none';}
 
 async function submitProperty(){
 let t=document.getElementById('fTitle').value.trim(), loc=document.getElementById('fLoc').value, type=document.getElementById('fType').value, price=document.getElementById('fPrice').value, beds=document.getElementById('fBeds').value, baths=document.getElementById('fBaths').value, imgLink=document.getElementById('fImg').value, desc=document.getElementById('fDesc').value, owner=document.getElementById('fOwner').value.trim(), phone=document.getElementById('fPhone').value.trim(), momo=document.getElementById('fMomo').value.trim();
+let isFeat = document.getElementById('fFeatured').checked;
 let img=uploadedPhoto||imgLink||'https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=800';
 if(!t){alert('Please fill Property Title');return;}
 if(!price){alert('Please fill Price');return;}
@@ -250,13 +272,13 @@ if(!phone){alert('Please fill Your Phone');return;}
 if(!momo){alert('Please fill MoMo Reference');return;}
 const {error} = await supabaseClient.from('listings').insert([{
   title:t, location:loc, type:type, price:parseInt(price), beds:parseInt(beds), baths:parseInt(baths),
-  photo_url:img, description:desc, owner_name:owner, owner_phone:phone, momo_ref:momo, status:'pending'
+  photo_url:img, description:desc, owner_name:owner, owner_phone:phone, momo_ref:momo, status:'pending', is_featured:isFeat
 }]);
 if(error){ alert('Error: '+error.message); return; }
-closeList(); uploadedPhoto=""; document.getElementById('photoPreview').style.display='none'; document.getElementById('fPhoto').value='';
-let msg=`NEW LISTING - E100 PAID%0A%0ATitle: ${t}%0ALocation: ${loc}%0AType: ${type}%0APrice: E${price}%0ABeds: ${beds} Baths: ${baths}%0AOwner: ${owner}%0APhone: ${phone}%0AMoMo Ref: ${momo}%0ADesc: ${desc}`;
+closeList(); uploadedPhoto=""; document.getElementById('photoPreview').style.display='none'; document.getElementById('fPhoto').value=''; document.getElementById('fFeatured').checked=false; updateFee();
+let msg=`NEW LISTING - ${isFeat?'FEATURED E250 PAID':'E100 PAID'}%0A%0ATitle: ${t}%0ALocation: ${loc}%0AType: ${type}%0APrice: E${price}%0ABeds: ${beds} Baths: ${baths}%0AOwner: ${owner}%0APhone: ${phone}%0AMoMo Ref: ${momo}%0ADesc: ${desc}`;
 window.open(`https://wa.me/${WA_NUMBER}?text=${msg}`,'_blank');
-alert('Submitted! Your listing is Pending Approval. Admin will approve after confirming E100 payment to 78213337.');
+alert(isFeat ? 'Submitted! Featured E250 - Admin will approve after confirming payment to 78213337.' : 'Submitted! Your listing is Pending Approval. Admin will approve after confirming E100 payment to 78213337.');
 await loadFromSupabase(); renderMy();
 }
 function viewDetail(idx){
@@ -264,7 +286,7 @@ let p=listings[idx];
 document.getElementById('detailContent').innerHTML=`<span class="close" onclick="document.getElementById('detailModal').style.display='none'">×</span>
 <img src="${p.img}" style="width:100%;border-radius:12px;height:200px;object-fit:cover">
 <h2 style="margin-top:10px">${p.title}</h2>
-<p>📍 ${p.loc} • <span class="badge ${p.type==='Rent'?'rent':'sale'}">${p.type}</span></p>
+<p>📍 ${p.loc} • <span class="badge ${p.type==='Rent'?'rent':'sale'}">${p.type}</span> ${p.is_featured?'<span class="badge featuredBadge">⭐ FEATURED</span>':''}</p>
 <h3 style="margin:10px 0">E${Number(p.price).toLocaleString()} ${p.type==='Rent'?'/month':''}</h3>
 <p>🛏 ${p.beds} Beds • 🛁 ${p.baths} Baths</p>
 <p style="margin:10px 0">${p.desc}</p>
@@ -304,20 +326,21 @@ renderAdmin();
 window.scrollTo(0,0);
 }
 function renderAdmin(){
-let pending=listings.filter(x=>x.status==='Pending');
-let approved=listings.filter(x=>x.status==='Approved');
+let real = listings.filter(x=>!x.is_demo);
+let pending=real.filter(x=>x.status==='Pending');
+let approved=real.filter(x=>x.status==='Approved');
 let html=`<div style="padding:0 16px"><b>${pending.length} Pending</b> • ${approved.length} Approved</div>`;
 if(pending.length===0){
 html+=`<p style="padding:20px;text-align:center">No pending listings. Good job!</p>`;
 }else{
 html+=pending.map(p=>{
 let idx=listings.indexOf(p);
-return `<div class="card"><div class="cardBody"><img src="${p.img}" style="height:150px;border-radius:10px;margin-bottom:8px"><b>${p.title}</b><br>📍 ${p.loc} • ${p.type} • E${p.price}<br>👤 Owner: ${p.owner} • 📞 ${p.phone}<br>💰 MoMo Ref: ${p.momo}<br><p style="font-size:13px;margin:6px 0">${p.desc}</p><div class="actions"><button class="green" onclick="approveListing(${idx})">✅ Approve</button><button class="red" onclick="rejectListing(${idx})">❌ Reject</button></div></div></div>`
+return `<div class="card ${p.is_featured?'featuredCard':''}"><div class="cardBody"><img src="${p.img}" style="height:150px;border-radius:10px;margin-bottom:8px"><b>${p.title}</b> ${p.is_featured?'<span class="badge featuredBadge">⭐ FEATURED - Check E250</span>':'<span style="font-size:12px;color:#666">Normal - Check E100</span>'}<br>📍 ${p.loc} • ${p.type} • E${p.price}<br>👤 Owner: ${p.owner} • 📞 ${p.phone}<br>💰 MoMo Ref: ${p.momo}<br><p style="font-size:13px;margin:6px 0">${p.desc}</p><div class="actions"><button class="green" onclick="approveListing(${idx})">✅ Approve</button><button class="red" onclick="rejectListing(${idx})">❌ Reject</button></div></div></div>`
 }).join('');
 }
 html+=approved.map(p=>{
 let idx=listings.indexOf(p);
-return `<div class="card"><div class="cardBody"><b>${p.title} - APPROVED ✅</b><br><button class="red" style="margin-top:8px;padding:8px 12px;border:none;border-radius:8px" onclick="rejectListing(${idx})">Remove</button></div></div>`
+return `<div class="card"><div class="cardBody"><b>${p.title} - APPROVED ✅</b> ${p.is_featured?'⭐ FEATURED':''}<br><button class="red" style="margin-top:8px;padding:8px 12px;border:none;border-radius:8px" onclick="rejectListing(${idx})">Remove</button> <button onclick="toggleFeatured(${idx})" style="margin-top:8px;padding:8px 12px;border:none;border-radius:8px;background:#FFD700;font-weight:bold">${p.is_featured?'Unfeature':'Make Featured'}</button></div></div>`
 }).join('');
 document.getElementById('adminList').innerHTML=html;
 }
@@ -327,6 +350,12 @@ await supabaseClient.from('listings').update({status:'approved'}).eq('id',id);
 alert('Approved! Now live for everyone.');
 await loadFromSupabase(); renderAdmin();
 }
+async function toggleFeatured(idx){
+let id = listings[idx].id;
+let newVal = !listings[idx].is_featured;
+await supabaseClient.from('listings').update({is_featured:newVal}).eq('id',id);
+await loadFromSupabase(); renderAdmin();
+}
 async function rejectListing(idx){
 if(!confirm('Reject / Remove this listing?'))return;
 let id = listings[idx].id;
@@ -334,8 +363,8 @@ await supabaseClient.from('listings').delete().eq('id',id);
 await loadFromSupabase(); renderAdmin();
 }
 function renderMy(){
-let mine=listings.filter(x=>x.status==='Pending' || x.status==='Approved');
-document.getElementById('myList').innerHTML=mine.map(p=>`<div class="card"><div class="cardBody"><b>${p.title}</b> - ${p.loc} - E${p.price}<br><span class="badge ${p.status==='Approved'?'rent':'pending'}">${p.status}</span><p style="font-size:12px;margin-top:6px">MoMo Ref: ${p.momo||''} • Waiting for Admin approval if Pending</p></div></div>`).join('') || '<p style="padding:20px;text-align:center">No listings yet. Tap + List Property.</p>';
+let mine=listings.filter(x=>!x.is_demo && (x.status==='Pending' || x.status==='Approved'));
+document.getElementById('myList').innerHTML=mine.map(p=>`<div class="card"><div class="cardBody"><b>${p.title}</b> - ${p.loc} - E${p.price}<br><span class="badge ${p.status==='Approved'?'rent':'pending'}">${p.status}</span> ${p.is_featured?'<span class="badge featuredBadge">⭐ FEATURED</span>':''}<p style="font-size:12px;margin-top:6px">MoMo Ref: ${p.momo||''} • Waiting for Admin approval if Pending</p></div></div>`).join('') || '<p style="padding:20px;text-align:center">No listings yet. Tap + List Property.</p>';
 }
 loadFromSupabase();
 </script>

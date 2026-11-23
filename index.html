@@ -240,7 +240,6 @@ try{
 listings.push(newItem);
 localStorage.setItem('esw_listings',JSON.stringify(listings));
 }catch(e){
-// STORAGE FULL - Save without big photo, use link/placeholder instead
 listings.pop();
 newItem.img=imgLink||'https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=800';
 listings.push(newItem);
@@ -300,16 +299,20 @@ window.scrollTo(0,0);
 function renderAdmin(){
 let pending=listings.filter(x=>x.status==='Pending');
 let approved=listings.filter(x=>x.status==='Approved' && x.owner!=='Admin');
-document.getElementById('adminList').innerHTML=
-`<div style="padding:0 16px"><b>${pending.length} Pending</b> • ${approved.length} Approved by owners</div>`+
-pending.map(p=>{
+let html=`<div style="padding:0 16px"><b>${pending.length} Pending</b> • ${approved.length} Approved by owners</div>`;
+if(pending.length===0){
+html+=`<p style="padding:20px;text-align:center">No pending listings. Good job!</p>`;
+}else{
+html+=pending.map(p=>{
 let idx=listings.indexOf(p);
 return `<div class="card"><div class="cardBody"><img src="${p.img}" style="height:150px;border-radius:10px;margin-bottom:8px"><b>${p.title}</b><br>📍 ${p.loc} • ${p.type} • E${p.price}<br>👤 Owner: ${p.owner} • 📞 ${p.phone}<br>💰 MoMo Ref: ${p.momo}<br><p style="font-size:13px;margin:6px 0">${p.desc}</p><div class="actions"><button class="green" onclick="approveListing(${idx})">✅ Approve</button><button class="red" onclick="rejectListing(${idx})">❌ Reject</button></div></div></div>`
-}).join('') || '<p style="padding:20px;text-align:center">No pending listings. Good job!</p>' +
-approved.map(p=>{
+}).join('');
+}
+html+=approved.map(p=>{
 let idx=listings.indexOf(p);
 return `<div class="card"><div class="cardBody"><b>${p.title} - APPROVED ✅</b><br><button class="red" style="margin-top:8px;padding:8px 12px;border:none;border-radius:8px" onclick="rejectListing(${idx})">Remove</button></div></div>`
 }).join('');
+document.getElementById('adminList').innerHTML=html;
 }
 function approveListing(idx){
 listings[idx].status='Approved';

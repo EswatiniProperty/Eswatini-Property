@@ -20,6 +20,11 @@ body{background:#f2f4f8;padding-bottom:80px}
 .chips{display:flex;gap:8px;overflow:auto;padding:12px 16px}
 .chips button{white-space:nowrap;border:1px solid #ddd;background:white;padding:8px 14px;border-radius:20px;cursor:pointer}
 .chips button.active{background:#0b2f5e;color:white}
+.filterBox{background:white;margin:0 16px 10px;padding:12px;border-radius:14px;box-shadow:0 2px 8px rgba(0,0,0,.08)}
+.filterBox label{font-size:12px;font-weight:bold;color:#0b2f5e}
+.filterBox input,.filterBox select{width:100%;padding:10px;margin:4px 0 8px;border:1px solid #ddd;border-radius:10px;font-size:14px}
+.fRow{display:flex;gap:8px}.fRow>div{flex:1}
+.clearBtn{width:100%;padding:10px;border:1px solid #0b2f5e;background:white;color:#0b2f5e;border-radius:10px;font-weight:bold;cursor:pointer}
 .section{padding:0 16px;display:flex;justify-content:space-between;align-items:center}
 .section h3{font-size:17px}
 .card{background:white;margin:12px 16px;border-radius:16px;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,.08)}
@@ -75,6 +80,19 @@ body{background:#f2f4f8;padding-bottom:80px}
 <button onclick="setLoc('Matsapha',this)">Matsapha</button>
 <button onclick="setLoc('Nhlangano',this)">Nhlangano</button>
 <button onclick="setLoc('Siteki',this)">Siteki</button>
+</div>
+
+<!-- FILTER + SORT -->
+<div class="filterBox">
+<div class="fRow">
+<div><label>Min Price (E)</label><input id="minPrice" type="number" placeholder="e.g. 2000" oninput="render()"></div>
+<div><label>Max Price (E)</label><input id="maxPrice" type="number" placeholder="e.g. 8000" oninput="render()"></div>
+</div>
+<div class="fRow">
+<div><label>Beds</label><select id="bedsFilter" onchange="render()"><option value="">Any Beds</option><option value="1">1+ Bed</option><option value="2">2+ Beds</option><option value="3">3+ Beds</option><option value="4">4+ Beds</option></select></div>
+<div><label>Sort By</label><select id="sortBy" onchange="render()"><option value="new">Newest First</option><option value="low">Price: Low to High</option><option value="high">Price: High to Low</option><option value="beds">Most Beds</option></select></div>
+</div>
+<button class="clearBtn" onclick="clearFilters()">Clear Filters</button>
 </div>
 
 <div class="ownerBox">👋 <b>Are you an owner?</b> List your property for only <b>E100</b> for 30 days. Pay via MoMo to <b>78213337</b>. We find tenants/buyers for you. <a href="#" onclick="openList();return false;">List Now →</a></div>
@@ -134,21 +152,32 @@ body{background:#f2f4f8;padding-bottom:80px}
 </div>
 
 <script>
+const WA_NUMBER="381659393420";
 let listings = JSON.parse(localStorage.getItem('esw_listings')||'[]');
 if(listings.length===0){
 listings=[
-{title:"Modern 3 Bed House",loc:"Manzini",type:"Rent",price:5500,beds:3,baths:2,desc:"Spacious house near Manzini town. Water & electricity included. Secure yard.",img:"https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=800",owner:"Admin",status:"Approved"},
-{title:"2 Bed Flat",loc:"Mbabane",type:"Rent",price:4500,beds:2,baths:1,desc:"Clean flat in Mbabane CBD. Ideal for young professionals.",img:"https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800",owner:"Admin",status:"Approved"},
-{title:"Family House for Sale",loc:"Matsapha",type:"Sale",price:850000,beds:4,baths:3,desc:"4 bed family home in Matsapha. Big yard, garage, title deed.",img:"https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800",owner:"Admin",status:"Approved"}
+{title:"Modern 3 Bed House",loc:"Manzini",type:"Rent",price:5500,beds:3,baths:2,desc:"Spacious house near Manzini town. Water & electricity included. Secure yard.",img:"https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=800",owner:"Admin",status:"Approved",date:Date.now()},
+{title:"2 Bed Flat",loc:"Mbabane",type:"Rent",price:4500,beds:2,baths:1,desc:"Clean flat in Mbabane CBD. Ideal for young professionals.",img:"https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800",owner:"Admin",status:"Approved",date:Date.now()-1000},
+{title:"Family House for Sale",loc:"Matsapha",type:"Sale",price:850000,beds:4,baths:3,desc:"4 bed family home in Matsapha. Big yard, garage, title deed.",img:"https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800",owner:"Admin",status:"Approved",date:Date.now()-2000}
 ];
 localStorage.setItem('esw_listings',JSON.stringify(listings));
 }
+listings.forEach((l,i)=>{if(!l.date) l.date=Date.now()-i*1000});
 let curLoc='All', curType='All';
 function setLoc(l,el){curLoc=l;document.querySelectorAll('.chips button').forEach(b=>b.classList.remove('active'));el.classList.add('active');render();}
 function filterType(t){curType=t;render();}
+function clearFilters(){document.getElementById('searchInput').value='';document.getElementById('minPrice').value='';document.getElementById('maxPrice').value='';document.getElementById('bedsFilter').value='';document.getElementById('sortBy').value='new';curLoc='All';curType='All';document.querySelectorAll('.chips button').forEach(b=>b.classList.remove('active'));document.querySelector('.chips button').classList.add('active');render();}
 function render(){
 let q=document.getElementById('searchInput').value.toLowerCase();
-let filtered=listings.filter(x=>x.status==='Approved' && (curLoc==='All'||x.loc===curLoc) && (curType==='All'||x.type===curType) && (x.title.toLowerCase().includes(q)||x.loc.toLowerCase().includes(q)));
+let minP=parseInt(document.getElementById('minPrice').value)||0;
+let maxP=parseInt(document.getElementById('maxPrice').value)||999999999;
+let minBeds=parseInt(document.getElementById('bedsFilter').value)||0;
+let sort=document.getElementById('sortBy').value;
+let filtered=listings.filter(x=>x.status==='Approved' && (curLoc==='All'||x.loc===curLoc) && (curType==='All'||x.type===curType) && Number(x.price)>=minP && Number(x.price)<=maxP && Number(x.beds)>=minBeds && (x.title.toLowerCase().includes(q)||x.loc.toLowerCase().includes(q)||(x.desc||'').toLowerCase().includes(q)));
+if(sort==='low') filtered.sort((a,b)=>Number(a.price)-Number(b.price));
+if(sort==='high') filtered.sort((a,b)=>Number(b.price)-Number(a.price));
+if(sort==='beds') filtered.sort((a,b)=>Number(b.beds)-Number(a.beds));
+if(sort==='new') filtered.sort((a,b)=>(b.date||0)-(a.date||0));
 document.getElementById('count').innerText=filtered.length+' found';
 document.getElementById('list').innerHTML=filtered.map((p,i)=>{
 let idx=listings.indexOf(p);
@@ -165,18 +194,18 @@ return `<div class="card">
 <button class="details" onclick="viewDetail(${idx})">View</button>
 </div>
 </div></div>`
-}).join('') || '<p style="text-align:center;padding:20px">No properties found. Try All.</p>';
+}).join('') || '<p style="text-align:center;padding:20px">No properties found. Try Clear Filters.</p>';
 }
 function openList(){document.getElementById('listModal').style.display='block';}
 function closeList(){document.getElementById('listModal').style.display='none';}
 function submitProperty(){
 let t=document.getElementById('fTitle').value, loc=document.getElementById('fLoc').value, type=document.getElementById('fType').value, price=document.getElementById('fPrice').value, beds=document.getElementById('fBeds').value, baths=document.getElementById('fBaths').value, img=document.getElementById('fImg').value||'https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=800', desc=document.getElementById('fDesc').value, owner=document.getElementById('fOwner').value, phone=document.getElementById('fPhone').value, momo=document.getElementById('fMomo').value;
 if(!t||!price||!owner||!phone||!momo){alert('Please fill Title, Price, Your Name, Phone and MoMo Reference');return;}
-listings.push({title:t,loc:loc,type:type,price:price,beds:beds,baths:baths,img:img,desc:desc,owner:owner,phone:phone,momo:momo,status:"Pending"});
+listings.push({title:t,loc:loc,type:type,price:price,beds:beds,baths:baths,img:img,desc:desc,owner:owner,phone:phone,momo:momo,status:"Pending",date:Date.now()});
 localStorage.setItem('esw_listings',JSON.stringify(listings));
 closeList();
 let msg=`NEW LISTING - E100 PAID%0A%0ATitle: ${t}%0ALocation: ${loc}%0AType: ${type}%0APrice: E${price}%0ABeds: ${beds} Baths: ${baths}%0AOwner: ${owner}%0APhone: ${phone}%0AMoMo Ref: ${momo}%0ADesc: ${desc}`;
-window.open(`https://wa.me/381659393420?text=${msg}`,'_blank');
+window.open(`https://wa.me/${WA_NUMBER}?text=${msg}`,'_blank');
 alert('Submitted! Your listing is Pending Approval. Admin will approve after confirming E100 payment to 78213337.');
 render(); renderMy();
 }
@@ -197,9 +226,8 @@ document.getElementById('detailModal').style.display='block';
 function enquireProperty(idx){
 let p=listings[idx];
 let msg=`Hi Eswatini Property! I'm interested in:%0A%0A${p.title}%0A${p.loc} - E${p.price} ${p.type}%0A%0APlease connect me to the owner.`;
-window.open(`https://wa.me/381659393420?text=${msg}`,'_blank');
+window.open(`https://wa.me/${WA_NUMBER}?text=${msg}`,'_blank');
 }
-function enquireAdmin(){window.open(`https://wa.me/381659393420?text=Hi Eswatini Property, I need help.`,'_blank');}
 function showMy(btn){
 document.querySelectorAll('.nav button').forEach(b=>b.classList.remove('active'));if(btn)btn.classList.add('active');
 document.getElementById('mySection').classList.remove('hidden');

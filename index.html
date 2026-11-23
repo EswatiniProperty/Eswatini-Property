@@ -46,7 +46,7 @@ body{background:#f2f4f8;padding-bottom:80px}
 .payBox{background:#eef4ff;padding:12px;border-radius:12px;margin:10px 0;font-size:14px}
 .payBox b{color:#0b2f5e}
 .bigBtn{width:100%;padding:13px;border:none;border-radius:12px;font-weight:bold;font-size:16px;cursor:pointer;margin-top:8px}
-.green{background:#25D366}.blue{background:#0b2f5e;color:white}.grey{background:#eee}
+.green{background:#25D366}.blue{background:#0b2f5e;color:white}.grey{background:#eee}.red{background:#ff4444;color:white}
 .close{float:right;font-size:22px;cursor:pointer}
 .hidden{display:none}
 </style>
@@ -87,6 +87,12 @@ body{background:#f2f4f8;padding-bottom:80px}
 <div id="myList"></div>
 </div>
 
+<div id="adminSection" class="hidden">
+<div class="section"><h3>🔐 Admin - Pending Approvals</h3><button onclick="showHome(document.querySelector('.nav button'))" style="padding:6px 12px;border-radius:10px;border:1px solid #ddd;background:white">Back Home</button></div>
+<div id="adminList"></div>
+<div style="padding:0 16px"><p style="font-size:12px;color:#666">Check MoMo 78213337 for payment, then Approve. If no payment, Reject.</p></div>
+</div>
+
 <!-- LIST MODAL -->
 <div id="listModal" class="modal">
 <div class="modalContent">
@@ -124,7 +130,7 @@ body{background:#f2f4f8;padding-bottom:80px}
 <button onclick="document.getElementById('searchInput').focus()">🔍<br>Search</button>
 <button onclick="openList()">➕<br>List Property</button>
 <button onclick="showMy(this)">📋<br>My Listings</button>
-<button onclick="enquireAdmin()">💬<br>Contact Admin</button>
+<button onclick="openAdmin(this)">🔐<br>Admin</button>
 </div>
 
 <script>
@@ -169,7 +175,6 @@ if(!t||!price||!owner||!phone||!momo){alert('Please fill Title, Price, Your Name
 listings.push({title:t,loc:loc,type:type,price:price,beds:beds,baths:baths,img:img,desc:desc,owner:owner,phone:phone,momo:momo,status:"Pending"});
 localStorage.setItem('esw_listings',JSON.stringify(listings));
 closeList();
-// Send to Admin via WhatsApp
 let msg=`NEW LISTING - E100 PAID%0A%0ATitle: ${t}%0ALocation: ${loc}%0AType: ${type}%0APrice: E${price}%0ABeds: ${beds} Baths: ${baths}%0AOwner: ${owner}%0APhone: ${phone}%0AMoMo Ref: ${momo}%0ADesc: ${desc}`;
 window.open(`https://wa.me/381659393420?text=${msg}`,'_blank');
 alert('Submitted! Your listing is Pending Approval. Admin will approve after confirming E100 payment to 78213337.');
@@ -196,17 +201,55 @@ window.open(`https://wa.me/381659393420?text=${msg}`,'_blank');
 }
 function enquireAdmin(){window.open(`https://wa.me/381659393420?text=Hi Eswatini Property, I need help.`,'_blank');}
 function showMy(btn){
-document.querySelectorAll('.nav button').forEach(b=>b.classList.remove('active'));btn.classList.add('active');
+document.querySelectorAll('.nav button').forEach(b=>b.classList.remove('active'));if(btn)btn.classList.add('active');
 document.getElementById('mySection').classList.remove('hidden');
+document.getElementById('adminSection').classList.add('hidden');
 document.getElementById('list').classList.add('hidden');
 renderMy();
 window.scrollTo(0,0);
 }
 function showHome(btn){
-document.querySelectorAll('.nav button').forEach(b=>b.classList.remove('active'));btn.classList.add('active');
+document.querySelectorAll('.nav button').forEach(b=>b.classList.remove('active'));if(btn)btn.classList.add('active');
 document.getElementById('mySection').classList.add('hidden');
+document.getElementById('adminSection').classList.add('hidden');
 document.getElementById('list').classList.remove('hidden');
 render();
+}
+function openAdmin(btn){
+let pass=prompt('Enter Admin Password:');
+if(pass!=='1234'){alert('Wrong password');return;}
+document.querySelectorAll('.nav button').forEach(b=>b.classList.remove('active'));if(btn)btn.classList.add('active');
+document.getElementById('mySection').classList.add('hidden');
+document.getElementById('list').classList.add('hidden');
+document.getElementById('adminSection').classList.remove('hidden');
+renderAdmin();
+window.scrollTo(0,0);
+}
+function renderAdmin(){
+let pending=listings.filter(x=>x.status==='Pending');
+let approved=listings.filter(x=>x.status==='Approved' && x.owner!=='Admin');
+document.getElementById('adminList').innerHTML=
+`<div style="padding:0 16px"><b>${pending.length} Pending</b> • ${approved.length} Approved by owners</div>`+
+pending.map(p=>{
+let idx=listings.indexOf(p);
+return `<div class="card"><div class="cardBody"><b>${p.title}</b><br>📍 ${p.loc} • ${p.type} • E${p.price}<br>👤 Owner: ${p.owner} • 📞 ${p.phone}<br>💰 MoMo Ref: ${p.momo}<br><p style="font-size:13px;margin:6px 0">${p.desc}</p><div class="actions"><button class="green" onclick="approveListing(${idx})">✅ Approve</button><button class="red" onclick="rejectListing(${idx})">❌ Reject</button></div></div></div>`
+}).join('') || '<p style="padding:20px;text-align:center">No pending listings. Good job!</p>' +
+approved.map(p=>{
+let idx=listings.indexOf(p);
+return `<div class="card"><div class="cardBody"><b>${p.title} - APPROVED ✅</b><br><button class="red" style="margin-top:8px;padding:8px 12px;border:none;border-radius:8px" onclick="rejectListing(${idx})">Remove</button></div></div>`
+}).join('');
+}
+function approveListing(idx){
+listings[idx].status='Approved';
+localStorage.setItem('esw_listings',JSON.stringify(listings));
+alert('Approved! Now live for everyone.');
+render(); renderAdmin();
+}
+function rejectListing(idx){
+if(!confirm('Reject / Remove this listing?'))return;
+listings.splice(idx,1);
+localStorage.setItem('esw_listings',JSON.stringify(listings));
+render(); renderAdmin();
 }
 function renderMy(){
 let mine=listings.filter(x=>x.owner!=='Admin');

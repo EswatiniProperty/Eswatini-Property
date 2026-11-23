@@ -171,7 +171,7 @@ localStorage.setItem('esw_listings',JSON.stringify(listings));
 closeList();
 // Send to Admin via WhatsApp
 let msg=`NEW LISTING - E100 PAID%0A%0ATitle: ${t}%0ALocation: ${loc}%0AType: ${type}%0APrice: E${price}%0ABeds: ${beds} Baths: ${baths}%0AOwner: ${owner}%0APhone: ${phone}%0AMoMo Ref: ${momo}%0ADesc: ${desc}`;
-window.open(`https://wa.me/381611775384?text=${msg}`,'_blank');
+window.open(`https://wa.me/381659393420?text=${msg}`,'_blank');
 alert('Submitted! Your listing is Pending Approval. Admin will approve after confirming E100 payment to 78213337.');
 render(); renderMy();
 }
@@ -192,9 +192,9 @@ document.getElementById('detailModal').style.display='block';
 function enquireProperty(idx){
 let p=listings[idx];
 let msg=`Hi Eswatini Property! I'm interested in:%0A%0A${p.title}%0A${p.loc} - E${p.price} ${p.type}%0A%0APlease connect me to the owner.`;
-window.open(`https://wa.me/381611775384?text=${msg}`,'_blank');
+window.open(`https://wa.me/381659393420?text=${msg}`,'_blank');
 }
-function enquireAdmin(){window.open(`https://wa.me/381611775384?text=Hi Eswatini Property, I need help.`,'_blank');}
+function enquireAdmin(){window.open(`https://wa.me/381659393420?text=Hi Eswatini Property, I need help.`,'_blank');}
 function showMy(btn){
 document.querySelectorAll('.nav button').forEach(b=>b.classList.remove('active'));btn.classList.add('active');
 document.getElementById('mySection').classList.remove('hidden');

@@ -2,12 +2,19 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Eswatini Property - Find Your Home</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Eswatini Property</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Eswatini Property">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0b2f5e">
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%230b2f5e'/%3E%3Ctext x='50' y='68' font-size='55' text-anchor='middle' fill='white'%3E🏠%3C/text%3E%3C/svg%3E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%230b2f5e'/%3E%3Ctext x='50' y='68' font-size='55' text-anchor='middle' fill='white'%3E🏠%3C/text%3E%3C/svg%3E">
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:Arial,sans-serif}
 body{background:#f2f4f8;padding-bottom:80px}
-.header{background:#0b2f5e;color:white;padding:18px 16px 20px;border-radius:0 0 20px 20px}
+.header{background:#0b2f5e;color:white;padding:18px 16px 20px;border-radius:0 0 20px 20px;padding-top:calc(18px + env(safe-area-inset-top))}
 .header h1{font-size:22px}
 .header p{font-size:13px;opacity:.9;margin-top:4px}
 .topbtns{display:flex;gap:8px;margin-top:14px}
@@ -40,7 +47,7 @@ body{background:#f2f4f8;padding-bottom:80px}
 .enquire{background:#25D366}.details{background:#eee}
 .ownerBox{background:#fff7e6;border:1px solid #ffcc66;padding:12px;border-radius:12px;margin:14px 16px;font-size:13px}
 .ownerBox b{color:#b36b00}
-.nav{position:fixed;bottom:0;left:0;right:0;background:white;display:flex;justify-content:space-around;padding:10px 0;border-top:1px solid #ddd;z-index:99}
+.nav{position:fixed;bottom:0;left:0;right:0;background:white;display:flex;justify-content:space-around;padding:10px 0 calc(10px + env(safe-area-inset-bottom));border-top:1px solid #ddd;z-index:99}
 .nav button{border:none;background:none;font-size:12px;cursor:pointer}
 .nav button.active{color:#0b2f5e;font-weight:bold}
 .modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:100;overflow:auto}

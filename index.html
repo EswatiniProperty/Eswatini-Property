@@ -5,6 +5,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Eswatini Property</title>
 <meta name="theme-color" content="#0b2f5e">
+<!-- PWA / ADD TO HOME SCREEN - NO ADDRESS BAR -->
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Eswatini Property">
+<meta name="application-name" content="Eswatini Property">
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Crect width='180' height='180' rx='40' fill='%230b2f5e'/%3E%3Ctext x='90' y='115' font-size='80' text-anchor='middle' fill='white' font-family='Arial'%3E🏠%3C/text%3E%3C/svg%3E">
+<link id="manifestLink" rel="manifest" href="">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:Arial,sans-serif}
@@ -45,6 +53,8 @@ body{background:#f2f4f8;padding-bottom:80px}
 .enquire{background:#25D366}.details{background:#eee}
 .ownerBox{background:#fff7e6;border:1px solid #ffcc66;padding:12px;border-radius:12px;margin:14px 16px;font-size:13px}
 .ownerBox b{color:#b36b00}
+.installBox{background:#0b2f5e;color:white;padding:12px;border-radius:12px;margin:14px 16px 0;font-size:13px;display:flex;gap:10px;align-items:center}
+.installBox button{background:white;color:#0b2f5e;border:none;padding:8px 12px;border-radius:20px;font-weight:bold;cursor:pointer;white-space:nowrap}
 .nav{position:fixed;bottom:0;left:0;right:0;background:white;display:flex;justify-content:space-around;padding:10px 0 calc(10px + env(safe-area-inset-bottom));border-top:1px solid #ddd;z-index:99}
 .nav button{border:none;background:none;font-size:12px;cursor:pointer}
 .nav button.active{color:#0b2f5e;font-weight:bold}
@@ -79,6 +89,13 @@ body{background:#f2f4f8;padding-bottom:80px}
 <button class="btnWhite" onclick="filterType('Sale')">🏡 Buy</button>
 <button class="btnBlue" onclick="openList()">+ List Property • E100</button>
 </div>
+</div>
+
+<div id="installBanner" class="installBox" style="display:none">
+<span style="font-size:22px">📱</span>
+<div style="flex:1"><b>Install Eswatini Property App</b><br><span id="installText" style="opacity:.9">Add to Home Screen for full-screen, no address bar.</span></div>
+<button id="installBtn" onclick="installApp()">Install</button>
+<button onclick="document.getElementById('installBanner').style.display='none'" style="background:transparent;color:white;padding:6px">✕</button>
 </div>
 
 <div class="searchBox">
@@ -158,6 +175,8 @@ body{background:#f2f4f8;padding-bottom:80px}
 
 <div id="detailModal" class="modal"><div class="modalContent" id="detailContent"></div></div>
 
+<div id="installModal" class="modal"><div class="modalContent" id="installModalContent"></div></div>
+
 <div class="nav">
 <button class="active" onclick="showHome(this)">🏠<br>Home</button>
 <button onclick="document.getElementById('searchInput').focus()">🔍<br>Search</button>
@@ -167,6 +186,55 @@ body{background:#f2f4f8;padding-bottom:80px}
 </div>
 
 <script>
+// --- PWA: Manifest + Service Worker (makes Add to Home Screen work, no address bar) ---
+(function(){
+  try{
+    var icon = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='100' fill='%230b2f5e'/%3E%3Ctext x='256' y='340' font-size='230' text-anchor='middle' fill='white' font-family='Arial'%3E🏠%3C/text%3E%3C/svg%3E";
+    var manifest = {name:"Eswatini Property", short_name:"Eswatini Property", description:"Find Your Home in Eswatini", start_url:".", display:"standalone", background_color:"#0b2f5e", theme_color:"#0b2f5e", orientation:"portrait", icons:[{src:icon, sizes:"512x512", type:"image/svg+xml", purpose:"any maskable"}]};
+    var blob = new Blob([JSON.stringify(manifest)], {type:"application/json"});
+    document.getElementById('manifestLink').href = URL.createObjectURL(blob);
+    if('serviceWorker' in navigator){
+      var swCode = "self.addEventListener('fetch',function(e){});";
+      var swBlob = new Blob([swCode], {type:"text/javascript"});
+      navigator.serviceWorker.register(URL.createObjectURL(swBlob)).catch(function(){});
+    }
+  }catch(e){}
+})();
+
+let deferredPrompt = null;
+window.addEventListener('beforeinstallprompt', function(e){
+  e.preventDefault();
+  deferredPrompt = e;
+  document.getElementById('installBanner').style.display='flex';
+  document.getElementById('installText').innerText = 'Tap Install to add to Home Screen.';
+});
+window.addEventListener('load', function(){
+  var isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+  if(!isStandalone){
+    var isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+    if(isIOS){
+      document.getElementById('installBanner').style.display='flex';
+      document.getElementById('installText').innerText = 'iPhone: Tap Share ⬆️ then Add to Home Screen.';
+    } else if(!deferredPrompt){
+      // Show banner anyway for Android Chrome so users know
+      setTimeout(function(){ document.getElementById('installBanner').style.display='flex'; }, 1500);
+    }
+  }
+});
+function installApp(){
+  var isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+  if(deferredPrompt){
+    deferredPrompt.prompt();
+    deferredPrompt.userChoice.then(function(){ deferredPrompt=null; document.getElementById('installBanner').style.display='none'; });
+  } else if(isIOS){
+    document.getElementById('installModalContent').innerHTML = '<span class="close" onclick="document.getElementById(\'installModal\').style.display=\'none\'">×</span><h2>📱 Install on iPhone</h2><p style="font-size:15px;line-height:1.6">1. Tap the <b>Share</b> button ⬆️ at the bottom of Safari<br>2. Scroll down and tap <b>Add to Home Screen</b><br>3. Tap <b>Add</b> at top right<br><br>Now open it from your Home Screen — it will open full-screen with <b>no address bar</b>.</p><button class="bigBtn blue" onclick="document.getElementById(\'installModal\').style.display=\'none\'">Got it</button>';
+    document.getElementById('installModal').style.display='block';
+  } else {
+    document.getElementById('installModalContent').innerHTML = '<span class="close" onclick="document.getElementById(\'installModal\').style.display=\'none\'">×</span><h2>📱 Install on Android</h2><p style="font-size:15px;line-height:1.6">1. Tap the <b>⋮ Menu</b> at top right of Chrome<br>2. Tap <b>Add to Home Screen</b> / <b>Install App</b><br>3. Tap <b>Install / Add</b><br><br>Now open it from your Home Screen — it will open full-screen with <b>no address bar</b>.</p><button class="bigBtn blue" onclick="document.getElementById(\'installModal\').style.display=\'none\'">Got it</button>';
+    document.getElementById('installModal').style.display='block';
+  }
+}
+
 const WA_NUMBER="381659393420";
 const SUPABASE_URL='https://udqirlpkbpyawqtdbemk.supabase.co';
 const SUPABASE_KEY='sb_publishable_HGaEiVfvFjS0sT6_YfZW4w_moJatIDM';

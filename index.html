@@ -15,6 +15,17 @@
 <link rel="apple-touch-icon" sizes="180x180" href="icon-180.png">
 <link rel="icon" type="image/png" href="icon-180.png">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<!-- ONESIGNAL PUSH NOTIFICATIONS -->
+<script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+<script>
+window.OneSignalDeferred = window.OneSignalDeferred || [];
+OneSignalDeferred.push(async function(OneSignal) {
+  await OneSignal.init({
+    appId: "97b77d46-e9f4-41d0-bb8c-5329badee6a8",
+    notifyButton: { enable: true },
+  });
+});
+</script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:Arial,sans-serif}
 body{background:#f2f4f8;padding-bottom:80px}
@@ -78,6 +89,8 @@ body{background:#f2f4f8;padding-bottom:80px}
 .removeThumb{position:absolute;top:-6px;right:-6px;background:#ff4444;color:white;border:none;border-radius:50%;width:20px;height:20px;font-size:12px;cursor:pointer;line-height:1}
 .detailThumb{width:70px;height:70px;object-fit:cover;border-radius:8px;cursor:pointer;border:1px solid #ddd}
 .detailThumb.active{border:2px solid #0b2f5e}
+#liveDot{width:8px;height:8px;background:#25D366;border-radius:50%;display:inline-block;animation:pulse 1.5s infinite}
+@keyframes pulse{0%{opacity:1}50%{opacity:.3}100%{opacity:1}}
 </style>
 </head>
 <body>
@@ -91,6 +104,8 @@ body{background:#f2f4f8;padding-bottom:80px}
 <button class="btnBlue" onclick="openList()">+ List Property • E100</button>
 </div>
 </div>
+
+<button onclick="askNotify()" style="width:calc(100% - 32px);padding:14px;background:#FFD700;border:none;border-radius:12px;font-weight:800;margin:12px 16px 0;font-size:15px;cursor:pointer">🔔 Turn ON Alerts for New Houses</button>
 
 <div id="installBanner" class="installBox" style="display:none">
 <span style="font-size:22px">📱</span>
@@ -128,6 +143,7 @@ body{background:#f2f4f8;padding-bottom:80px}
 <div class="ownerBox">👋 <b>Are you an owner?</b> List your property for only <b>E100</b> for 30 days. Want to be at the TOP? Add <b>⭐ Featured +E150</b> (Total E250). Pay via MoMo to <b>78213337</b>. <a href="#" onclick="openList();return false;">List Now →</a></div>
 
 <div class="section"><h3>Featured Properties</h3><span id="count"></span></div>
+<div style="padding:0 16px;font-size:12px;color:#666"><span id="liveDot"></span> Live • Updates instantly when anyone lists</div>
 <div id="list"></div>
 
 <div id="mySection" class="hidden">
@@ -220,6 +236,16 @@ function installApp(){
   }
 }
 
+// ===== PUSH NOTIFICATIONS - ONESIGNAL =====
+async function askNotify(){
+  try{
+    await OneSignal.Slidedown.promptPush();
+    alert('Done! You will now get alerts for new houses.');
+  }catch(e){
+    alert('Tap Allow on the popup to turn on alerts. On iPhone, open from Home Screen first.');
+  }
+}
+
 const WA_NUMBER="381659393420";
 const SUPABASE_URL='https://udqirlpkbpyawqtdbemk.supabase.co';
 const SUPABASE_KEY='sb_publishable_HGaEiVfvFjS0sT6_YfZW4w_moJatIDM';
@@ -229,6 +255,8 @@ let uploadedPhoto="";
 let uploadedPhotos=[];
 let listings = [];
 let curLoc='All', curType='All';
+let realtimeStarted = false;
+let lastFetch = 0;
 
 const DEMO_LISTINGS = [
   {id:-1, title:"Modern 4 Bed House in Manzini", loc:"Manzini", type:"Rent", price:8500, beds:4, baths:3, desc:"Spacious family house near Manzini town. Water + electricity, secure yard, garage. Perfect for family.", img:"https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=800", owner:"Test Owner", phone:"76xxxxxx", momo:"TEST", status:"Approved", is_featured:true, is_demo:true, date:Date.now()},
@@ -244,9 +272,36 @@ function updateFee(){
   document.getElementById('feeText').innerHTML = isF ? 'Total to Pay: <b>E250 (E100 + E150 Featured)</b><br>1. Send via MoMo to <b>78213337</b><br>2. Enter MoMo Reference below<br>3. Tap Submit - Admin will approve' : 'Total to Pay: <b>E100</b><br>1. Send via MoMo to <b>78213337</b><br>2. Enter MoMo Reference below<br>3. Tap Submit - Admin will approve';
 }
 
-async function loadFromSupabase(){
+// ===== INSTANT REFRESH - REALTIME =====
+function setupRealtime(){
+  if(realtimeStarted) return;
+  realtimeStarted = true;
+  try{
+    supabaseClient.channel('listings-live')
+      .on('postgres_changes', {event:'*', schema:'public', table:'listings'}, function(payload){
+        refreshNow();
+        if(!document.getElementById('adminSection').classList.contains('hidden')){
+          setTimeout(function(){ renderAdmin(); }, 600);
+        }
+      })
+      .subscribe();
+  }catch(e){ console.log('realtime error', e); }
+}
+function refreshNow(){
+  var now = Date.now();
+  if(now - lastFetch < 800) return;
+  lastFetch = now;
+  loadFromSupabase(true);
+}
+document.addEventListener('visibilitychange', function(){
+  if(!document.hidden){ refreshNow(); }
+});
+window.addEventListener('focus', function(){ refreshNow(); });
+setInterval(function(){ refreshNow(); }, 20000);
+
+async function loadFromSupabase(isSilent){
   const {data, error} = await supabaseClient.from('listings').select('*').order('created_at',{ascending:false});
-  if(error){ console.log(error); listings = [...DEMO_LISTINGS]; render(); return; }
+  if(error){ console.log(error); if(listings.length===0) listings = [...DEMO_LISTINGS]; render(); return; }
   listings = (data||[]).map(r=>({
     id: r.id,
     title: r.title, loc: r.location, type: r.type, price: r.price,
@@ -259,6 +314,8 @@ async function loadFromSupabase(){
   }));
   if(listings.length===0){ listings = [...DEMO_LISTINGS]; }
   render();
+  if(!document.getElementById('adminSection').classList.contains('hidden')) renderAdmin();
+  if(!document.getElementById('mySection').classList.contains('hidden')) renderMy();
 }
 
 function previewPhotos(input){
@@ -365,6 +422,7 @@ const {error} = await supabaseClient.from('listings').insert([{
 }]);
 if(error){ alert('Error: '+error.message); return; }
 closeList(); uploadedPhoto=""; uploadedPhotos=[]; renderPhotoPreviews(); document.getElementById('fPhoto').value=''; document.getElementById('fFeatured').checked=false; updateFee();
+refreshNow();
 let msg=`NEW LISTING - ${isFeat?'FEATURED E250 PAID':'E100 PAID'}%0A%0ATitle: ${t}%0ALocation: ${loc}%0AType: ${type}%0APrice: E${price}%0ABeds: ${beds} Baths: ${baths}%0AOwner: ${owner}%0APhone: ${phone}%0AMoMo Ref: ${momo}%0ADesc: ${desc}`;
 window.open(`https://wa.me/${WA_NUMBER}?text=${msg}`,'_blank');
 alert(isFeat ? 'Submitted! Featured E250 - Admin will approve after confirming payment to 78213337.' : 'Submitted! Your listing is Pending Approval. Admin will approve after confirming E100 payment to 78213337.');
@@ -438,7 +496,7 @@ document.getElementById('adminList').innerHTML=html;
 async function approveListing(idx){
 let id = listings[idx].id;
 await supabaseClient.from('listings').update({status:'approved'}).eq('id',id);
-alert('Approved! Now live for everyone.');
+alert('Approved! Now live for everyone - their phones will update instantly.');
 await loadFromSupabase(); renderAdmin();
 }
 async function toggleFeatured(idx){
@@ -457,6 +515,8 @@ function renderMy(){
 let mine=listings.filter(x=>!x.is_demo && (x.status==='Pending' || x.status==='Approved'));
 document.getElementById('myList').innerHTML=mine.map(p=>`<div class="card"><div class="cardBody"><b>${p.title}</b> - ${p.loc} - E${p.price}<br><span class="badge ${p.status==='Approved'?'rent':'pending'}">${p.status}</span> ${p.is_featured?'<span class="badge featuredBadge">⭐ FEATURED</span>':''}<p style="font-size:12px;margin-top:6px">MoMo Ref: ${p.momo||''} • Waiting for Admin approval if Pending</p></div></div>`).join('') || '<p style="padding:20px;text-align:center">No listings yet. Tap + List Property.</p>';
 }
+// Start
+setupRealtime();
 loadFromSupabase();
 </script>
 </body>

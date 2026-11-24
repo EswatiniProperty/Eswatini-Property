@@ -1,1 +1,39 @@
+name: Auto Send Push
 
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'listings.json'
+      - 'properties.json'
+      - 'data.json'
+  workflow_dispatch:
+    inputs:
+      title:
+        description: 'Notification Title'
+        required: true
+        default: 'New Property in Eswatini! 🏠'
+      message:
+        description: 'Notification Message'
+        required: true
+        default: 'New house just listed! Tap to view.'
+
+jobs:
+  send-push:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send OneSignal Push
+        run: |
+          TITLE="${{ github.event.inputs.title || 'New Property in Eswatini! 🏠' }}"
+          MESSAGE="${{ github.event.inputs.message || 'New house just listed! Tap to view.' }}"
+          
+          curl -X POST https://api.onesignal.com/notifications \
+            -H "Authorization: Basic ${{ secrets.ONESIGNAL_REST_API_KEY }}" \
+            -H "Content-Type: application/json" \
+            -d "{
+              \"app_id\": \"97b77d46-e9f4-41d0-bb8c-5329badee6a8\",
+              \"included_segments\": [\"All\"],
+              \"headings\": {\"en\": \"$TITLE\"},
+              \"contents\": {\"en\": \"$MESSAGE\"},
+              \"url\": \"https://eswatiniproperty.github.io/Eswatini-Property/\"
+            }"

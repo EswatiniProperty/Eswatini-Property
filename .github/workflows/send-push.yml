@@ -1,6 +1,6 @@
 name: Auto Send Push
 
-on:
+"on":
   push:
     branches: [main]
     paths:
